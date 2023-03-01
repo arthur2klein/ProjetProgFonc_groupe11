@@ -107,4 +107,13 @@ module Generator :
   end =
   struct
     (* TODO : Implémenter le type et tous les éléments de la signature *)
+
+    (*on definit un type 'a t , il s'agit d'une fonction qui ne prend pas d'argument unit et renvoie une valeur de type 'a *) 
+  type 'a t = unit -> 'a ;;
+
+  let next (gen : 'a t) : 'a = gen () ;;
+
+  let const (x : 'a) : 'a t = fun () -> x ;; 
+
+  
   end ;;
