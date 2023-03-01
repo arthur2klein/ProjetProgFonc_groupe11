@@ -118,8 +118,17 @@ module Generator :
   let bool (prob : float) : bool t =
   fun() -> Random.float 1.0 < prob ;;
 
-  let int (borne_inf : int)(borne_sup : int) : int t =
-  fun() -> Random.int (borne_sup - borne_inf + 1) +borne_sup ;;
+  let int (a : int)(b : int) : int t =
+  fun() -> Random.int (a - b + 1) + a ;;
 
-  
+  let int_nonneg (n : int) : int t =
+  fun() -> Random.int n ;; 
+
+  let float (x: float)(y: float): float t =
+  fun() -> Random.float (x -. y +. 1.0) +. x ;; 
+
+  let float_nonneg (x: float ) : float t = 
+  fun() -> Random.float n ;;
+
+  let char ()
   end ;;
