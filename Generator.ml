@@ -115,5 +115,11 @@ module Generator :
 
   let const (x : 'a) : 'a t = fun () -> x ;; 
 
+  let bool (prob : float) : bool t =
+  fun() -> Random.float 1.0 < prob ;;
+
+  let int (borne_inf : int)(borne_sup : int) : int t =
+  fun() -> Random.int (borne_sup - borne_inf + 1) +borne_sup ;;
+
   
   end ;;
