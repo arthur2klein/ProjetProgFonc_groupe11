@@ -119,13 +119,13 @@ module Generator :
   fun() -> Random.float 1.0 < prob ;;
 
   let int (a : int)(b : int) : int t =
-  fun() -> Random.int (a - b + 1) + a ;;
+  fun() -> Random.int (a - b + 1) + b ;;
 
   let int_nonneg (n : int) : int t =
   fun() -> Random.int n ;; 
 
   let float (x: float)(y: float): float t =
-  fun() -> Random.float (x -. y +. 1.0) +. x ;; 
+  fun() -> Random.float (x -. y +. 1.0) +. y ;; 
 
   let float_nonneg (x: float ) : float t = 
   fun() -> Random.float n ;;
