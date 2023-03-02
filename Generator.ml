@@ -128,7 +128,7 @@ module Generator :
   fun() -> Random.float (x -. y +. 1.0) +. y ;; 
 
   let float_nonneg (x: float ) : float t = 
-  fun() -> Random.float n ;;
+  fun() -> Random.float x ;;
 
   let char ()
   end ;;
