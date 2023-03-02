@@ -1,3 +1,5 @@
+#use "Generator.ml"
+
 module Reduction :
   sig
     (** Type d'une stratégie de réduction des éléments de type 'a
@@ -86,5 +88,53 @@ module Reduction :
   struct
     type 'a t = 'a -> 'a list ;;
 
-    (* TODO : Implémenter tous les éléments de la signature manquants *)
+    let empty (n: 'a): 'a list = 
+        []
+    ;;
+
+    let int (n: int): int list =
+        List.tl @@
+            List.init
+                (2 * n)
+                (fun (x: int): int ->
+                    if (x mod 2) = 0 then
+                        x / 2
+                    else
+                        -x / 2
+                )
+    ;;
+
+    let int_nonneg (n: int): int list =
+        List.init
+            n
+            Fun.id
+    ;;
+
+    let float (x: float): float list =
+        let generator = Generator.float (-.x) x in
+        [0.; -1.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
+        List.init
+            10
+            (fun (y: int): float ->
+                Generator.next @@ generator
+            )
+    ;;
+
+    let float_nonneg (x: float): float list =
+        let generator = Generator.float_nonneg x in
+        [0.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
+        List.init
+            10
+            (fun (y: int): float ->
+                Generator.next @@ generator
+            )
+    ;;
+
+    let char (c: char): char list =
+        Char.chr @@
+            List.init
+                (Char.code c)
+                Fun.id
+    ;;
+
   end ;;
