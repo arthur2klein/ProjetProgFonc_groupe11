@@ -129,6 +129,18 @@ module Generator :
 
   let float_nonneg (x: float ) : float t = 
   fun() -> Random.float x ;;
+  
+  (*la fonction Char.chr c'est pour convertir un entier en caractère*)
+  let char : char t = 
+  fun() -> Char.chr (Random.int 255) ;;
 
-  let char ()
-  end ;;
+  (*let alphanum : char t = *) 
+
+  let string (n : int)(gen : 'a t) : ('a list t) =
+
+  (* TRANSFORMATIONS *) 
+
+    let combine (fst_gen : 'a t) (snd_gen : 'b t) :
+     ('a * 'b) t = fun() ->(fst_gen(),snd_gen());;
+
+    
