@@ -140,7 +140,20 @@ module Generator :
 
   (* TRANSFORMATIONS *) 
 
-    let combine (fst_gen : 'a t) (snd_gen : 'b t) :
-     ('a * 'b) t = fun() ->(fst_gen(),snd_gen());;
+  let combine (fst_gen : 'a t) (snd_gen : 'b t) :
+    ('a * 'b) t = fun() ->(fst_gen(),snd_gen());; 
+  
+  let map (f :'a -> 'b ) (gen :'a t) : 'b t = fun() -> f(gen()) ;; 
+
+  (*let filter (p : 'a -> bool)(gen : 'a t) :'a t = 
+    fun() ->
+    let x = gen() in 
+    if p x then x else filter p gen() ;; (*la fonction est incorrect *)*) 
+
+  (*let partitioned_map (p : 'a -> bool)
+    (f : ('a -> 'b)('a -> 'b))
+    (gen : 'a t) : 'b t = 
+    fun()*)
+
 
     
