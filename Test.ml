@@ -90,7 +90,7 @@ module Test :
                    |Some x -> Some x
                    |None   -> rec_fails_at(n-1)
          in
-         rec_fails_at(n) ;;
+         rec_fails_at n ;;
 
 
 
