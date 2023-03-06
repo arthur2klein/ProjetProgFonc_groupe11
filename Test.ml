@@ -46,14 +46,12 @@ module Test :
 
 
     let make_test (g : 'a Generator.t) (r :'a Reduction.t) (p :'a Property.t) : 'a t =
-       { generator = g; reduction = r; property = p } ;;
+       { g; r; p } ;;
       
        
-    let generate_reduce_verify (test: 'a t): 'a option =
+    let generate_and_verify (test: 'a t): 'a option =
        let val_gen = test.generator() in 
-       let liste_red = test.reduction val_gen in 
-       let liste_red_satisfy_property = List.for_all test.property liste_red in 
-       if liste_red_satisfy_property then Some val_gen 
+       if test.property val_gen then Some val_gen 
        else None ;;
 
     
@@ -63,7 +61,7 @@ module Test :
           let rec boucle n = 
              if n = 0 then true 
              else 
-                match generate_reduce_verify test with 
+                match generate_and_verify test with 
                    | Some _ -> boucle (n-1)
                    | None -> false
           in 
@@ -101,3 +99,4 @@ module Test :
   
   
    
+
