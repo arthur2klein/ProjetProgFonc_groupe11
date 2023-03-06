@@ -28,6 +28,8 @@ module Test :
                  une valeur ne vérifiant pas `prop` (éventuellement en appliquant `red`) sinon
       *)
     val fails_at : int -> 'a t -> 'a option
+    val find_first_not_satisfying : 'a -> bool -> 'a list ->'a option 
+    val generate_and_verify : 'a t -> 'a option  
 
     (** Exécute plusieurs tests
       * @param n     nombre de valeurs testées par test
