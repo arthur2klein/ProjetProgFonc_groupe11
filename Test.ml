@@ -92,7 +92,18 @@ module Test :
          in
          rec_fails_at n ;;
 
-
+  
+   let execute (n : int) (tests :'a t list) : ('a t * 'a option) list =
+	let list_result = List.map (fun test-> (test,fails_at n test)) tests in
+	List.fold_left
+	(fun lst (test, value)-> 
+	match value with
+	| None   -> lst
+	| Some x -> (test, Some x) :: lst
+	) 
+	[]
+	list_result
+	;;
 
   end ;;
   
