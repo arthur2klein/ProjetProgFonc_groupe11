@@ -45,27 +45,52 @@ module Test :
     } ;;
 
 
-    let make_test (g : 'a Generator.t) (r :'a Reduction.t) (p :'a Property.t) : 'a t =
-       { g; r; p } ;;
+    let make_test (g : 'a Generator.t) (r : 'a Reduction.t) (p : 'a Property.t) :'a t =
+       {g; r; p} ;;
       
        
-    let generate_and_verify (test: 'a t): 'a option =
+    let generate_and_verify (test : 'a t) :'a option =
        let val_gen = test.generator() in 
        if test.property val_gen then Some val_gen 
        else None ;;
 
     
-    let check (n : int) (test : 'a t) : bool =  
+    let check (n : int) (test : 'a t) :bool =  
        if n <= 0 then false
        else 
-          let rec boucle n = 
+          let rec rec_check n = 
              if n = 0 then true 
              else 
                 match generate_and_verify test with 
-                   | Some _ -> boucle (n-1)
-                   | None -> false
+                   | Some _ ->  rec_check (n - 1)
+                   | None   -> false
           in 
-          boucle n ;;
+          rec_check n ;;
+
+
+
+    let rec find_first_not_satisfying : (f : 'a -> bool) (l : 'a list) :'a option = 
+       match l with
+       | []   -> None
+       | h::t -> if f h then find_first_not_satisfying f t else Some h ;;
+    
+    
+
+    let fails_at (n : int) (test : 'a t) :'a option =
+       if n <= 0 then None
+       else
+          let rec rec_fails_at n =
+	     if n = 0 then None 
+             else
+                let val_gen = test.generator() in
+                if not(test.property val_gen) then Some val_gen 
+                else  
+                   let list_red = test.reduction val_gen in
+                   match find_first_not_satisfying test.property list_red with 
+                   |Some x -> Some x
+                   |None   -> rec_fails_at(n-1)
+         in
+         rec_fails_at(n) ;;
 
 
 
