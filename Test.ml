@@ -28,8 +28,6 @@ module Test :
                  une valeur ne vérifiant pas `prop` (éventuellement en appliquant `red`) sinon
       *)
     val fails_at : int -> 'a t -> 'a option
-    val find_first_not_satisfying : 'a -> bool -> 'a list ->'a option 
-    val generate_and_verify : 'a t -> 'a option  
 
     (** Exécute plusieurs tests
       * @param n     nombre de valeurs testées par test
@@ -51,61 +49,46 @@ module Test :
        {g; r; p} ;;
       
        
-    let generate_and_verify (test : 'a t) :'a option =
-       let val_gen = test.generator() in 
-       if test.property val_gen then Some val_gen 
-       else None ;;
-
-    
     let check (n : int) (test : 'a t) :bool =  
        if n <= 0 then false
        else 
           let rec rec_check n = 
              if n = 0 then true 
-             else 
-                match generate_and_verify test with 
-                   | Some _ ->  rec_check (n - 1)
-                   | None   -> false
+             else if test.property (test.generator()) then rec_check (n - 1)
+             else false
           in 
           rec_check n ;;
-
-
 
     let rec find_first_not_satisfying : (f : 'a -> bool) (l : 'a list) :'a option = 
        match l with
        | []   -> None
        | h::t -> if f h then find_first_not_satisfying f t else Some h ;;
-    
-    
 
     let fails_at (n : int) (test : 'a t) :'a option =
-       if n <= 0 then None
-       else
-          let rec rec_fails_at n =
-	     if n = 0 then None 
-             else
-                let val_gen = test.generator() in
-                if not(test.property val_gen) then Some val_gen 
-                else  
-                   let list_red = test.reduction val_gen in
-                   match find_first_not_satisfying test.property list_red with 
-                   |Some x -> Some x
-                   |None   -> rec_fails_at(n-1)
-         in
-         rec_fails_at n ;;
+        if n <= 0 then None
+        else
+            let rec rec_fails_at n =
+                if n = 0 then None 
+                else
+                    let val_gen = test.generator() in
+                    let list_red = (test.reduction val_gen)@val_gen in
+                    match find_first_not_satisfying test.property list_red with 
+                    |Some x -> Some x
+                    |None   -> rec_fails_at(n-1)
+        in rec_fails_at n ;;
 
   
-   let execute (n : int) (tests :'a t list) : ('a t * 'a option) list =
-	let list_result = List.map (fun test-> (test,fails_at n test)) tests in
-	List.fold_left
-	(fun lst (test, value)-> 
-	match value with
-	| None   -> lst
-	| Some x -> (test, Some x) :: lst
-	) 
-	[]
-	list_result
-	;;
+    let execute (n : int) (tests :'a t list) : ('a t * 'a option) list =
+        let list_result = List.map (fun test-> (test,fails_at n test)) tests in
+        List.fold_left
+            (fun lst (test, value)-> 
+                match value with
+                | None   -> lst
+                | Some x -> (test, Some x) :: lst
+            ) 
+            []
+            list_result
+    ;;
 
   end ;;
   
