@@ -1,5 +1,3 @@
-#use "Generator.ml"
-
 module Reduction :
   sig
     (** Type d'une stratégie de réduction des éléments de type 'a
@@ -110,31 +108,114 @@ module Reduction :
             Fun.id
     ;;
 
+    let iterate (f: 'a -> 'a) (x: 'a) (n: int): ('a list) =
+        let rec aux (f: 'a -> 'a) (x: 'a) (n: int) (res: 'a list): ('a list) =
+            if (n <= 0) then
+                res
+            else
+                x::(List.map f res)
+        in aux f x n []
+    ;;
+
+    let plus_petit (f: float) (n: int) (rapport: float): (float list) =
+        List.rev @@
+            iterate
+                (fun x -> x *. rapport)
+                f
+                n
+    ;;
+
     let float (x: float): float list =
-        let generator = Generator.float (-.x) x in
         [0.; -1.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
-        List.init
-            10
-            (fun (y: int): float ->
-                Generator.next @@ generator
-            )
+        (plus_petit x 10 0.8) @
+        (plus_petit (-.x) 10 0.8)
     ;;
 
     let float_nonneg (x: float): float list =
-        let generator = Generator.float_nonneg x in
         [0.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
-        List.init
-            10
-            (fun (y: int): float ->
-                Generator.next @@ generator
-            )
+        (plus_petit x 20 0.9)
     ;;
 
     let char (c: char): char list =
-        Char.chr @@
-            List.init
+        List.map
+            Char.chr
+            (List.init
                 (Char.code c)
                 Fun.id
+            )
+    ;;
+
+    let alphanum (c: char): char list =
+        if ('0' <= c && c <= '9') then
+            List.map
+                Char.chr
+                (List.init
+                    (Char.code c - Char.code '0')
+                    (fun x -> x + Char.code '0')
+                )
+        else if ('a' <= c && c <= 'z') then
+            List.map
+                Char.chr
+                (List.init
+                    (Char.code c - Char.code 'a')
+                    (fun x -> x + Char.code 'a')
+                )
+        else if ('A' <= c && c <= 'Z') then
+            List.map
+                Char.chr
+                (List.init
+                    (Char.code c - Char.code 'A')
+                    (fun x -> x + Char.code 'A')
+                )
+        else
+            []
+    ;;
+
+    let prefixes_l (l: 'a list): ('a list) list =
+        List.fold_right
+            (fun tete res_temp ->
+                []::List.map
+                (fun element ->
+                    tete::element
+                )
+                res_temp
+            )
+            l
+            [[]]
+    ;;
+
+    let rec prefixes_s (s: string) (n: int): string list =
+        if (n <= 0) then
+            []
+        else
+            (String.sub s 0 n) :: (prefixes_s s (n - 1))
+    ;;
+
+    let string (red: char -> char list) (s: string): string list =
+        prefixes_s s (String.length s)
+    ;;
+
+    let list (red: 'a -> 'a list) (l: 'a list): ('a list) list =
+        prefixes_l l
+    ;;
+
+    let combine (fst_red: 'a -> 'a list) (snd_red: 'b -> 'b list) ((x, y): ('a * 'b)): ('a * 'b) list =
+        List.flatten @@
+            List.map
+                (fun element1 ->
+                    List.map
+                        (fun element2 ->
+                            (element1, element2)
+                        )
+                        (snd_red y)
+                )
+                (fst_red x)
+    ;;
+
+    let filter (p: 'a -> bool) (red: 'a -> 'a list) (x: 'a): 'a list =
+        List.filter
+            p
+            (red x)
     ;;
 
   end ;;
