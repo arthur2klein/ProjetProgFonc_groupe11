@@ -106,7 +106,6 @@ module Generator :
     val partitioned_map : ('a -> bool) -> (('a -> 'b) * ('a -> 'b)) -> 'a t -> 'b t
   end =
   struct
-    (* TODO : Implémenter le type et tous les éléments de la signature *)
 
     (*on definit un type 'a t , il s'agit d'une fonction qui ne prend pas d'argument unit et renvoie une valeur de type 'a *) 
   type 'a t = unit -> 'a ;;
@@ -116,45 +115,61 @@ module Generator :
   let const (x : 'a) : 'a t = fun () -> x ;; 
 
   let bool (prob : float) : bool t =
-  fun() -> Random.float 1.0 < prob ;;
+      fun() -> Random.float 1.0 < prob ;;
 
   let int (a : int)(b : int) : int t =
-  fun() -> Random.int (a - b + 1) + b ;;
+      fun() -> Random.int (b - a + 1) + a ;;
 
   let int_nonneg (n : int) : int t =
-  fun() -> Random.int n ;; 
+      fun() -> Random.int n ;; 
 
   let float (x: float)(y: float): float t =
-  fun() -> Random.float (x -. y +. 1.0) +. y ;; 
+      fun() -> Random.float (y -. x) +. x ;; 
 
   let float_nonneg (x: float ) : float t = 
-  fun() -> Random.float x ;;
+      fun() -> Random.float x ;;
   
-  (*la fonction Char.chr c'est pour convertir un entier en caractère*)
+  (*La fonction Char.chr est utilisée pour convertir un entier en caractère*)
   let char : char t = 
-  fun() -> Char.chr (Random.int 255) ;;
+      fun() -> Char.chr (Random.int 255) ;;
 
-  (*let alphanum : char t = *) 
+  let alphanum : char t =
+      fun() ->
+          let value = (int 0 61) () in
+          if (0 <= value && value <= 9) then
+              Char.chr (value + Char.code '0') 
+          else if (10 <= value && value <= 35) then
+              Char.chr (value - 10 + Char.code 'a') 
+          else
+              Char.chr (value - 36 + Char.code 'A') ;;
 
-  let string (n : int)(gen : 'a t) : ('a list t) =
+  let string (n : int)(gen : char t) : (string t) =
+      fun() ->
+          String.concat "" (List.init n (fun _ -> String.make 1 (gen ()))) ;;
+
+  let list (n: int) (gen: 'a t): ('a list) t =
+      fun () ->
+          List.init
+            n
+            (fun _ -> gen());;
 
   (* TRANSFORMATIONS *) 
 
-  let combine (fst_gen : 'a t) (snd_gen : 'b t) :
-    ('a * 'b) t = fun() ->(fst_gen(),snd_gen());; 
+  let combine (fst_gen : 'a t) (snd_gen : 'b t) : ('a * 'b) t =
+      fun() -> (fst_gen(), snd_gen());; 
   
   let map (f :'a -> 'b ) (gen :'a t) : 'b t = fun() -> f(gen()) ;; 
 
-  let rec filter (p : 'a -> bool)(gen : 'a t) 
-    :'a t= 
-    fun() ->
-    let x = gen() in 
-    if p x then x else filter p gen() ;; 
+  let rec filter (p : 'a -> bool) (gen : 'a t) :'a t= 
+      fun() ->
+          let x = gen() in 
+          if p x then x else filter p gen() ;; 
     
-  (*let partitioned_map (p : 'a -> bool)
-    (f : ('a -> 'b)('a -> 'b))
-    (gen : 'a t) : 'b t = 
-    fun()*)
+  let partitioned_map (p : 'a -> bool) ((f, g) : ('a -> 'b) * ('a -> 'b)) (gen : 'a t) : 'b t = 
+      fun() ->
+          let val_gen = gen() in
+          if p val_gen then
+              f val_gen
+          else g val_gen;;
 
-
-    
+  end;;
