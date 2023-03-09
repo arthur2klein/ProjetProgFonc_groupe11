@@ -15,5 +15,8 @@ module Property :
   struct
     type 'a t = 'a -> bool ;;
 
-    (* TODO : Implémenter tous les éléments de la signature manquants *)
+    let always_true (x: 'a) : bool = 
+              true ;;
+    let always_false (x: 'a) : bool = 
+              false ;;
   end ;;
