@@ -59,7 +59,7 @@ module Test :
           in 
           rec_check n ;;
 
-    let rec find_first_not_satisfying : (f : 'a -> bool) (l : 'a list) :'a option = 
+    let rec find_first_not_satisfying (f : 'a -> bool) (l : 'a list) :'a option = 
        match l with
        | []   -> None
        | h::t -> if f h then find_first_not_satisfying f t else Some h ;;
