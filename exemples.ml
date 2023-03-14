@@ -3,11 +3,11 @@
 (* Tests de la division euclidienne                                                                          *)
 (* Les tests sont effectués sur des couples d'entiers compris entre -100 et 100 dont le second est *non nul* *)
 (* (d'où l'utilisation du filtre pour éviter des divisions par zéro).                                        *)
-let gen_intcouple =
+let gen_intcouple  =
   let gen_dividend =                            Generator.int (-100) 100
   and gen_divisor  = Generator.filter ((<>) 0) (Generator.int (-100) 100)
     in Generator.combine gen_dividend gen_divisor ;;
-let red_intcouple =
+let red_intcouple  =
   let red_dividend =                           Reduction.int
   and red_divisor  = Reduction.filter ((<>) 0) Reduction.int
     in Reduction.combine red_dividend red_divisor ;;

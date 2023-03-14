@@ -90,24 +90,6 @@ module Reduction :
         []
     ;;
 
-    let int (n: int): int list =
-        List.tl @@
-            List.init
-                (2 * n)
-                (fun (x: int): int ->
-                    if (x mod 2) = 0 then
-                        x / 2
-                    else
-                        -x / 2
-                )
-    ;;
-
-    let int_nonneg (n: int): int list =
-        List.init
-            n
-            Fun.id
-    ;;
-
     let iterate (f: 'a -> 'a) (x: 'a) (n: int): ('a list) =
         let rec aux (f: 'a -> 'a) (x: 'a) (n: int) (res: 'a list): ('a list) =
             if (n <= 0) then
@@ -117,23 +99,49 @@ module Reduction :
         in aux f x n []
     ;;
 
-    let plus_petit (f: float) (n: int) (rapport: float): (float list) =
+    let rec iterate_while (f: 'a -> 'a) (x: 'a) (p: 'a -> bool): ('a list) =
+        if (not @@ p x) then
+            []
+        else
+            x :: iterate_while f (f x) p
+    ;;
+
+    let plus_petit_f (f: float) (rapport: float): (float list) =
         List.rev @@
-            iterate
+            iterate_while
                 (fun x -> x *. rapport)
                 f
-                n
+                (fun x -> x > 1.)
+    ;;
+
+    let plus_petit_i (i: int) (dividende: int) (diviseur: int): (int list) =
+        List.rev @@
+            iterate_while
+                (fun x -> x * dividende / diviseur)
+                i
+                (fun x -> x > 1)
+    ;;
+
+    let int (n: int): int list =
+        [0] @
+        (plus_petit_i n 9 10) @
+        (plus_petit_i (-n) 9 10)
+   ;;
+
+    let int_nonneg (n: int): int list =
+        [0] @
+        (plus_petit_i n 9 10)
     ;;
 
     let float (x: float): float list =
         [0.; -1.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
-        (plus_petit x 10 0.8) @
-        (plus_petit (-.x) 10 0.8)
+        (plus_petit_f x 0.9) @
+        (plus_petit_f (-.x) 0.9)
     ;;
 
     let float_nonneg (x: float): float list =
         [0.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
-        (plus_petit x 20 0.9)
+        (plus_petit_f x 0.9)
     ;;
 
     let char (c: char): char list =

@@ -10,10 +10,11 @@ module Test :
     (** Construit un test
       * @param gen  générateur pseudo-aléatoire de valeurs de test
       * @param red  stratégie de réduction
+      * @param name nom du test
       * @param prop propriété qui fait l'objet du test
       * @return     test créé
       *)
-    val make_test : 'a Generator.t -> 'a Reduction.t -> 'a Property.t -> 'a t
+    val make_test : 'a Generator.t -> 'a Reduction.t -> string -> 'a Property.t -> 'a t
 
     (** Effectue un test
       * @param n    nombre de valeurs à tester
@@ -39,23 +40,24 @@ module Test :
   struct
    
     type 'a t = {
+       name: string;
        generator : 'a Generator.t;
        reduction : 'a Reduction.t;
        property  : 'a Property.t
     } ;;
 
 
-    let make_test (g : 'a Generator.t) (r : 'a Reduction.t) (p : 'a Property.t) :'a t =
-       {g; r; p} ;;
+    let make_test (g : 'a Generator.t) (r : 'a Reduction.t) (name: string) (p : 'a Property.t) :'a t =
+        {name = name; generator = g; reduction = r; property = p} ;;
       
        
     let check (n : int) (test : 'a t) :bool =  
        if n <= 0 then false
        else 
           let rec rec_check n = 
-             if n = 0 then true 
-             else if test.property (test.generator()) then rec_check (n - 1)
-             else false
+              if n = 0 then (Printf.printf "%s is true: " test.name; true)
+             else if test.property (Generator.next test.generator) then rec_check (n - 1)
+             else (Printf.printf "%s is false: " test.name; false)
           in 
           rec_check n ;;
 
@@ -68,56 +70,18 @@ module Test :
         if n <= 0 then None
         else
             let rec rec_fails_at n =
-                if n = 0 then None 
+                if n = 0 then (Printf.printf "%s does not fail: " test.name; None)
                 else
-                    let val_gen = test.generator() in
-                    let list_red = (test.reduction val_gen)@val_gen in
+                    let val_gen = Generator.next test.generator in
+                    let list_red = (test.reduction val_gen)@[val_gen] in
                     match find_first_not_satisfying test.property list_red with 
-                    |Some x -> Some x
+                    |Some x -> (Printf.printf "%s fails for the value: " test.name; Some x)
                     |None   -> rec_fails_at(n-1)
         in rec_fails_at n ;;
 
   
     let execute (n : int) (tests :'a t list) : ('a t * 'a option) list =
-        let list_result = List.map (fun test-> (test,fails_at n test)) tests in
-        List.fold_left
-            (fun lst (test, value)-> 
-                match value with
-                | None   -> lst
-                | Some x -> (test, Some x) :: lst
-            ) 
-            []
-            list_result
+        List.map (fun test-> (test,fails_at n test)) tests
     ;;
 
   end ;;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-   
-
