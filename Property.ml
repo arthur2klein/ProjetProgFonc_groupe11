@@ -18,7 +18,7 @@ module Property :
     val not_none: 'a Option t
 
     (** Propriété vraie si l'entrée n'est pas Error *)
-    val not_error: 'a Result t
+    val not_error: ('a, 'e) Result t
   end =
   struct
     type 'a t = 'a -> bool ;;
@@ -27,4 +27,8 @@ module Property :
               true ;;
     let always_false (x: 'a) : bool = 
               false ;;
+    let not_none (x: 'a Option): bool =
+      is_some x ;;
+    let not_error (x :('a, 'e) Result) : bool =
+      is_ok x ;;
   end ;;
