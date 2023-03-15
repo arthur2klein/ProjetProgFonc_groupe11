@@ -90,126 +90,168 @@ module Reduction :
         []
     ;;
 
-    let iterate (f: 'a -> 'a) (x: 'a) (n: int): ('a list) =
-        let rec aux (f: 'a -> 'a) (x: 'a) (n: int) (res: 'a list): ('a list) =
-            if (n <= 0) then
-                res
-            else
-                x::(List.map f res)
-        in aux f x n []
-    ;;
-
-    let rec iterate_while (f: 'a -> 'a) (x: 'a) (p: 'a -> bool): ('a list) =
-        if (not @@ p x) then
-            []
-        else
-            x :: iterate_while f (f x) p
-    ;;
-
-    let plus_petit_f (f: float) (rapport: float): (float list) =
-        List.rev @@
-            iterate_while
-                (fun x -> x *. rapport)
-                f
-                (fun x -> x > 1.)
-    ;;
-
-    let plus_petit_i (i: int) (dividende: int) (diviseur: int): (int list) =
-        List.rev @@
-            iterate_while
-                (fun x -> x * dividende / diviseur)
-                i
-                (fun x -> x > 1)
-    ;;
-
     let int (n: int): int list =
-        [0] @
-        (plus_petit_i n 9 10) @
-        (plus_petit_i (-n) 9 10)
+        if (n = 0) then []
+        else if (n >= 0) then [0; n * 9 / 10]
+        else [0; n * 9 / 10; -n]
    ;;
 
     let int_nonneg (n: int): int list =
-        [0] @
-        (plus_petit_i n 9 10)
+        if (n = 0) then []
+        else [0; n * 9 / 10]
+    ;;
+
+    let add_reduced_float (x: float) (l: float list): float list =
+        (x *. 0.9) :: l
+    ;;
+
+    let add_dec_if_sup_1 (x: float) (l: float list): float list =
+        if (x <= 1.) then l
+        else (x -. Float.floor x) :: l
+    ;;
+
+    let add_floor_if_not_integer (x: float) (l: float list): float list =
+        if (Float.is_integer x) then l
+        else (Float.floor x) :: l
+    ;;
+
+    let add_positive_if_negative (x: float) (l: float list): float list =
+        if (x >= 0.) then l
+        else (-.x) :: l
     ;;
 
     let float (x: float): float list =
-        [0.; -1.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
-        (plus_petit_f x 0.9) @
-        (plus_petit_f (-.x) 0.9)
+        let res = [] in
+        if (x = 0.) then res
+        else
+            0. :: add_dec_if_sup_1
+                x
+                (add_floor_if_not_integer
+                    x
+                    (add_positive_if_negative
+                        x
+                        (add_reduced_float
+                            x
+                            res
+                        )
+                    )
+                )
     ;;
 
     let float_nonneg (x: float): float list =
-        [0.; 1.; Float.floor x; Float.ceil x; x -. Float.floor x] @
-        (plus_petit_f x 0.9)
+        let res = [] in
+        if (x = 0.) then res
+        else
+            0. :: add_dec_if_sup_1
+                x
+                (add_floor_if_not_integer
+                    x
+                    (add_reduced_float
+                        x
+                        res
+                    )
+                )
     ;;
 
     let char (c: char): char list =
-        List.map
-            Char.chr
-            (List.init
-                (Char.code c)
-                Fun.id
-            )
+        if (c = '\000') then []
+        else
+            ['\000'; Char.chr (Char.code c - 1)]
     ;;
 
     let alphanum (c: char): char list =
-        if ('0' <= c && c <= '9') then
-            List.map
-                Char.chr
-                (List.init
-                    (Char.code c - Char.code '0')
-                    (fun x -> x + Char.code '0')
-                )
-        else if ('a' <= c && c <= 'z') then
-            List.map
-                Char.chr
-                (List.init
-                    (Char.code c - Char.code 'a')
-                    (fun x -> x + Char.code 'a')
-                )
-        else if ('A' <= c && c <= 'Z') then
-            List.map
-                Char.chr
-                (List.init
-                    (Char.code c - Char.code 'A')
-                    (fun x -> x + Char.code 'A')
-                )
+        if ('0' < c && c <= '9') then
+            ['0'; Char.chr (Char.code c - 1)]
+        else if ('a' < c && c <= 'z') then
+            ['a'; Char.chr (Char.code c - 1)]
+        else if ('A' < c && c <= 'Z') then
+            ['A'; Char.chr (Char.code c - 1)]
         else
             []
     ;;
 
-    let prefixes_l (l: 'a list): ('a list) list =
-        List.fold_right
-            (fun tete res_temp ->
-                []::List.map
-                (fun element ->
-                    tete::element
-                )
-                res_temp
+    let rec list_sub_aux (l: 'a list) (deb: int) (fin: int) (res: 'a list): ('a list) =
+        match l with
+        | [] -> res
+        | h :: t ->
+            if (deb > 0) then
+                list_sub_aux t (deb - 1) (fin - 1) res
+            else if (fin > 0) then
+                list_sub_aux t deb (fin - 1) (h::res)
+            else
+                res
+    ;;
+
+    let list_sub (l: 'a list) (deb: int) (fin: int): ('a list) =
+        list_sub_aux l deb fin []
+    ;;
+    
+    let reduce_element (red: 'a -> 'a list) (l: 'a list) (i: int): ('a list) list =
+        let new_element = red (List.nth l i)
+        and pre_list = list_sub l 0 (i - 1)
+        and post_list = list_sub l (i + 1) (List.length l - 1) in
+        List.map
+            (fun element ->
+                pre_list @ (element :: post_list)
             )
-            l
-            [[]]
+            new_element
     ;;
 
-    let rec prefixes_s (s: string) (n: int): string list =
-        if (n <= 0) then
-            []
-        else
-            (String.sub s 0 n) :: (prefixes_s s (n - 1))
+    let reduce_elements (red: 'a -> 'a list) (l: 'a list): ('a list) list =
+        List.flatten
+            (List.init
+                (List.length l)
+                (reduce_element red l)
+            )
     ;;
 
-    let string (red: char -> char list) (s: string): string list =
-        prefixes_s s (String.length s)
+    let reduce_size (l: 'a list): ('a list) list =
+        List.init
+            (List.length l)
+            (fun i ->
+                (list_sub
+                    l
+                    0
+                    (i - 1)
+                ) @ (list_sub
+                    l
+                    (i + 1)
+                    (List.length l - 1)
+                )
+            )
+    ;;
+
+    let string_from_list (l: char list): string =
+        String.concat
+            ""
+            (List.map
+                (String.make 1)
+                l
+            )
+    ;;
+    
+    let string_to_list (s: string): char list =
+        List.init
+            (String.length s)
+            (String.get s)
     ;;
 
     let list (red: 'a -> 'a list) (l: 'a list): ('a list) list =
-        prefixes_l l
+        [] :: (reduce_size l) @ (reduce_elements red l)
+    ;;
+
+    let string (red: char -> char list) (s: string): string list =
+        List.map
+            string_from_list
+            (list
+                red
+                (string_to_list s)
+            )
     ;;
 
     let combine (fst_red: 'a -> 'a list) (snd_red: 'b -> 'b list) ((x, y): ('a * 'b)): ('a * 'b) list =
-        List.flatten @@
-            List.map
+        List.flatten
+            (List.map
                 (fun element1 ->
                     List.map
                         (fun element2 ->
@@ -218,6 +260,7 @@ module Reduction :
                         (snd_red y)
                 )
                 (fst_red x)
+            )
     ;;
 
     let filter (p: 'a -> bool) (red: 'a -> 'a list) (x: 'a): 'a list =

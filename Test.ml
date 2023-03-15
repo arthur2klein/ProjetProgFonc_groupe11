@@ -66,18 +66,31 @@ module Test :
        | []   -> None
        | h::t -> if f h then find_first_not_satisfying f t else Some h ;;
 
-    let fails_at (n : int) (test : 'a t) :'a option =
-        if n <= 0 then None
+    let rec generate_not_satisfy (f: 'a -> bool) (gen: 'a Generator.t) (n: int): 'a option =
+        if n = 0 then None
         else
-            let rec rec_fails_at n =
-                if n = 0 then (Printf.printf "%s does not fail: " test.name; None)
-                else
-                    let val_gen = Generator.next test.generator in
-                    let list_red = (test.reduction val_gen)@[val_gen] in
-                    match find_first_not_satisfying test.property list_red with 
-                    |Some x -> (Printf.printf "%s fails for the value: " test.name; Some x)
-                    |None   -> rec_fails_at(n-1)
-        in rec_fails_at n ;;
+            let val_gen = Generator.next gen in
+            if (f val_gen) then generate_not_satisfy f gen (n - 1)
+            else Some val_gen
+    ;;
+
+    let rec reduce_not_satisfy (f: 'a -> bool) (red: 'a Reduction.t) (value: 'a): 'a =
+        let list_reduced = red value in
+        let value_reduced = find_first_not_satisfying f list_reduced in
+        match value_reduced with
+        | None -> value
+        | Some x -> reduce_not_satisfy f red x
+    ;;
+
+    let fails_at (n : int) (test : 'a t) :'a option =
+        let value_gen = generate_not_satisfy test.property test.generator n in
+        match value_gen with
+        | None -> (Printf.printf "%s does not fail: " test.name; None)
+        | Some x -> (
+            Printf.printf "%s fails for the value: " test.name;
+            Some(reduce_not_satisfy test.property test.reduction x)
+        )
+    ;;
 
   
     let execute (n : int) (tests :'a t list) : ('a t * 'a option) list =
