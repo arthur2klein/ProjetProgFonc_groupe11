@@ -11,6 +11,14 @@ module Property :
 
     (** Propriété jamais   vérifiée *)
     val always_false : 'a t
+
+    (* ERREURS *)
+
+    (** Propriété vraie si l'entrée n'est pas None *)
+    val not_none: 'a Option t
+
+    (** Propriété vraie si l'entrée n'est pas Error *)
+    val not_error: 'a Result t
   end =
   struct
     type 'a t = 'a -> bool ;;
