@@ -55,10 +55,10 @@ module Generator :
     (** Générateur pseudo-aléatoire de caractères alphanumériques *)
     val alphanum : char t
 
-  (** Générateur pseudo-aléatoire de caractères *)
+  (** Générateur pseudo-aléatoire de caractères en majuscule *)
     val majuscule : char t
 
-   (** Générateur pseudo-aléatoire de caractères *)
+   (** Générateur pseudo-aléatoire de caractères en minuscule *)
     val minuscule : char t 
 
 
@@ -161,12 +161,14 @@ module Generator :
             (fun _ -> gen());;
 
   let majuscule = 
-    let lettre() = Random.int  26 in 
-    char_of_int(lettre()+65) ;; 
+    fun () ->
+        let lettre = Random.int  26 in 
+        char_of_int (lettre+65) ;; 
 
   let minuscule = 
-    let lettre() = Random.int  26 in 
-    char_of_int(lettre()+97) ;; 
+    fun () ->
+        let lettre = Random.int  26 in 
+        char_of_int (lettre+97) ;; 
   
 
   (* TRANSFORMATIONS *) 
