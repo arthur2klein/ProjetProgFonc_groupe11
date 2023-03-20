@@ -25,10 +25,14 @@ module Property :
 
     let always_true (x: 'a) : bool = 
               true ;;
+
     let always_false (x: 'a) : bool = 
               false ;;
+
     let not_none (x: 'a option): bool =
       Option.is_some x ;;
+
     let not_error (x :('a, 'e) result) : bool =
       Result.is_ok x ;;
+
   end ;;
