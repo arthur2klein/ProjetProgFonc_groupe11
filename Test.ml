@@ -36,6 +36,8 @@ module Test :
       * @return      tableau associatif des résultats
       *)
     val execute : int -> ('a t) list -> ('a t * 'a option) list
+    val find_all_not_satisfying 'a -> bool -> 'a list -> 'a list 
+    val find_list_red int -> 'a t ->'a list 
   end =
   struct
    
@@ -96,5 +98,24 @@ module Test :
     let execute (n : int) (tests :'a t list) : ('a t * 'a option) list =
         List.map (fun test-> (test,fails_at n test)) tests
     ;;
+    let rec find_all_not_satisfying (f : 'a -> bool) (l : 'a list) :'a list =
+    List.filter (fun x -> not (f x)) l;;
 
+    let find_list_red (n : int) (test : 'a t) :'a list =
+      if n <= 0 then []
+      else
+        let rec find_list_red_helper n =
+          if n = 0 then (Printf.printf "%s does not fail\n" test.name; [])
+          else
+            let val_gen = Generator.next test.generator in
+            let list_red = (test.reduction val_gen)@[val_gen] in
+            let not_satisfying = find_all_not_satisfying test.property list_red in
+            match not_satisfying with
+            | [] -> find_list_red_helper (n-1)
+            | _ ->
+              Printf.printf "%s fails for the values: " test.name;
+              List.iter (fun x -> Printf.printf "%s " (string_of_int x)) not_satisfying;
+              Printf.printf "\n";
+              not_satisfying @ (find_list_red_helper (n-1))
+        in find_list_red_helper n;;
   end ;;
