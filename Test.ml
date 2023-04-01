@@ -98,8 +98,10 @@ module Test :
     let execute (n : int) (tests :'a t list) : ('a t * 'a option) list =
         List.map (fun test-> (test,fails_at n test)) tests
     ;;
+
     let rec find_all_not_satisfying (f : 'a -> bool) (l : 'a list) :'a list =
-    List.filter (fun x -> not (f x)) l;;
+    List.filter (fun x -> not (f x)) l
+    ;;
 
     let find_list_red (n : int) (test : 'a t) :'a list =
       if n <= 0 then []
@@ -117,5 +119,6 @@ module Test :
               List.iter (fun x -> Printf.printf "%s " (string_of_int x)) not_satisfying;
               Printf.printf "\n";
               not_satisfying @ (find_list_red_helper (n-1))
-        in find_list_red_helper n;;
+        in find_list_red_helper n
+    ;;
   end ;;
